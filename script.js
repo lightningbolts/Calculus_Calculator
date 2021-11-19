@@ -386,93 +386,112 @@ function fixed_point(f, first_guess) {
 //---------------------------------------
 //This part parses the string into objects. str -> object which goes through the calculator functions
 
-function tokenize(code) {
-  var results = [];
-  var tokenRegExp = /\s*([A-Za-z]+|[0-9]+|\S)\s*/g;
-
-  var m;
-  while ((m = tokenRegExp.exec(code)) !== null)
-    results.push(m[1]);
-  return results;
+String.prototype.isNumeric = function () {
+  return !isNaN(parseFloat(this)) && isFinite(this);
 }
 
-function isNumber(token) {
-  return token !== undefined && token.match(/^[0-9]+$/) !== null;
-}
-
-function isName(token) {
-  return token !== undefined && token.match(/^[A-Za-z]+$/) !== null;
-}
-function parse(code) {
-
-  var tokens = tokenize(code);
-
-  var position = 0;
-
-  function peek() {
-    return tokens[position];
-  }
-
-  function consume(token) {
-    assert.strictEqual(token, tokens[position]);
-    position++;
-  }
-
-  function parsePrimaryExpr() {
-    var t = peek();
-
-    if (isNumber(t)) {
-      consume(t);
-      return { type: "number", value: t };
-    } else if (isName(t)) {
-      consume(t);
-      return { type: "name", id: t };
-    } else if (t === "(") {
-      consume(t);
-      var expr = parseExpr();
-      if (peek() !== ")")
-        throw new SyntaxError("expected )");
-      consume(")");
-      return expr;
-    } else {
-
-      function parseMulExpr() {
-        var expr = parsePrimaryExpr();
-        var t = peek();
-        while (t === "*" || t === "/") {
-          consume(t);
-          var rhs = parsePrimaryExpr();
-          expr = { type: t, left: expr, right: rhs };
-          t = peek();
-        }
-        return expr;
-      }
-
-      function parseExpr() {
-        var expr = parseMulExpr();
-        var t = peek();
-        while (t === "+" || t === "-") {
-          consume(t);
-          var rhs = parseMulExpr();
-          expr = { type: t, left: expr, right: rhs };
-          t = peek();
-        }
-        return expr;
-      }
-
-      var result = parseExpr();
-
-      if (position !== tokens.length)
-        throw new SyntaxError("unexpected '" + peek() + "'");
-
-      return result;
+Array.prototype.clean = function () {
+  for (var i = 0; i < this.length; i++) {
+    if (this[i] === "") {
+      this.splice(i, 1);
     }
   }
+  return this;
 }
-//---------------------------------------
-//---------------------------------------
 
+const infixToPostfix = (infix) => {
+  var outputQueue = "";
+  var operatorStack = [];
+  var operators = {
+    "^": {
+      precedence: 4,
+      associativity: "Right"
+    },
+    "/": {
+      precedence: 3,
+      associativity: "Left"
+    },
+    "*": {
+      precedence: 3,
+      associativity: "Left"
+    },
+    "+": {
+      precedence: 2,
+      associativity: "Left"
+    },
+    "-": {
+      precedence: 2,
+      associativity: "Left"
+    }
+  }
+  infix = infix.replace(/\s+/g, "");
+  infix = infix.split(/([\+\-\*\/\^\(\)])/).clean();
+  for (var i = 0; i < infix.length; i++) {
+    var token = infix[i];
+    if (token.isNumeric()) {
+      outputQueue += token + " ";
+    } else if ("^*/+-".indexOf(token) !== -1) {
+      var o1 = token;
+      var o2 = operatorStack[operatorStack.length - 1];
+      while ("^*/+-".indexOf(o2) !== -1 && ((operators[o1].associativity === "Left" && operators[o1].precedence <= operators[o2].precedence) || (operators[o1].associativity === "Right" && operators[o1].precedence < operators[o2].precedence))) {
+        outputQueue += operatorStack.pop() + " ";
+        o2 = operatorStack[operatorStack.length - 1];
+      }
+      operatorStack.push(o1);
+    } else if (/^[A-Za-z]+$/.test(token)) {
+      operatorStack.push(token);
+    } else if (token === "(") {
+      operatorStack.push(token);
+    } else if (token === ")") {
+      while (operatorStack[operatorStack.length - 1] !== "(") {
+        outputQueue += operatorStack.pop() + " ";
+      }
+      operatorStack.pop();
+    }
+  }
+  while (operatorStack.length > 0) {
+    outputQueue += operatorStack.pop() + " ";
+  }
+  return outputQueue.trim();
+}
+
+const solvePostfix = (postfix) => {
+  var resultStack = [];
+  postfix = postfix.split(" ");
+  for (var i = 0; i < postfix.length; i++) {
+    if (postfix[i].isNumeric()) {
+      resultStack.push(make_number(postfix[i]));
+    } else {
+      var a = make_number(resultStack.pop());
+      var b = make_number(resultStack.pop());
+      if (postfix[i] === "+") {
+        resultStack.push(make_sum(a, b));
+      } else if (postfix[i] === "-") {
+        //resultStack.push(parseInt(b) - parseInt(a));
+      } else if (postfix[i] === "*") {
+        resultStack.push(make_product(a, b));
+      } else if (postfix[i] === "/") {
+        //resultStack.push(parseInt(b) / parseInt(a));
+      } else if (postfix[i] === "^") {
+        resultStack.push(make_power(a, b));
+      }
+    }
+  }
+  if (resultStack.length > 1) {
+    return "error";
+  } else {
+    console.log(resultStack)
+    return resultStack.pop();
+  }
+}
+console.log(infixToPostfix("3 * 2"))
+console.log(solvePostfix(infixToPostfix("3*2")))
+
+//---------------------------------------
+//---------------------------------------
+//console.log(parse("(1 + 2) / 3)"))
 //This is the testing arena.
+//console.log(tokenize("3 * x"))
 //console.log(half_interval_method(x => x * x * x - 2 * x - 3, 1, 2))
 
 //console.log('type of num_expr: ', num_expr.type);
@@ -483,7 +502,7 @@ const pow1 = make_power(x, make_number(2));
 
 const expr1 = make_sum(pow1, number1);
 const fexpr = make_expr(EXPR_TYPE.Power, expr1, number1);
-console.log(display_expr(basic_simplify_expr(derive(fexpr, "x"))));
+//console.log(display_expr(basic_simplify_expr(derive(fesxpr, "x"))));
 //console.log(display_expr(derive(make_expr(EXPR_TYPE.Exponential, number1, expr1), "x")))
 //expr2 = (4*x)^4
 //console.log(expr1)
