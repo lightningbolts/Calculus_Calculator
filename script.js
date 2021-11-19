@@ -462,18 +462,22 @@ const solvePostfix = (postfix) => {
     if (postfix[i].isNumeric()) {
       resultStack.push(make_number(postfix[i]));
     } else {
-      var a = make_number(resultStack.pop());
-      var b = make_number(resultStack.pop());
-      if (postfix[i] === "+") {
-        resultStack.push(make_sum(a, b));
-      } else if (postfix[i] === "-") {
-        //resultStack.push(parseInt(b) - parseInt(a));
-      } else if (postfix[i] === "*") {
-        resultStack.push(make_product(a, b));
-      } else if (postfix[i] === "/") {
-        //resultStack.push(parseInt(b) / parseInt(a));
-      } else if (postfix[i] === "^") {
-        resultStack.push(make_power(a, b));
+      if (postfix[i] === "x") {
+        resultStack.push(make_variable(postfix[i]))
+      } else {
+        var a = resultStack.pop();
+        var b = resultStack.pop();
+        if (postfix[i] === "+") {
+          resultStack.push(make_sum(a, b));
+        } else if (postfix[i] === "-") {
+          //resultStack.push(parseInt(b) - parseInt(a));
+        } else if (postfix[i] === "*") {
+          resultStack.push(make_product(a, b));
+        } else if (postfix[i] === "/") {
+          //resultStack.push(parseInt(b) / parseInt(a));
+        } else if (postfix[i] === "^") {
+          resultStack.push(make_power(a, b));
+        }
       }
     }
   }
@@ -484,8 +488,15 @@ const solvePostfix = (postfix) => {
     return resultStack.pop();
   }
 }
-console.log(infixToPostfix("3 * 2"))
-console.log(solvePostfix(infixToPostfix("3*2")))
+
+function tester(object) {
+  return display_expr(basic_simplify_expr(derive(object, "x")))
+}
+console.log(infixToPostfix("2+3+4"))
+let expr = solvePostfix(infixToPostfix("6*x"))
+//console.log(expr)
+console.log(tester(expr))
+//console.log(display_expr(basic_simplify_expr(derive(solvePostfix(infixToPostfix("6*x")), "x"))))
 
 //---------------------------------------
 //---------------------------------------
