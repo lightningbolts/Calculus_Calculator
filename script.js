@@ -313,10 +313,7 @@ function derive_power(expr, variable) {
     return part2
   }
 }
-
-function toView(value) {
-  return JSON.stringify(value, null, 2)
-}
+// TODO: FIX THIS
 function derive_log(expr, variable) {
   const f = expr.operand1
   return make_product(make_division(make_number(1), f), derive(f, variable))
