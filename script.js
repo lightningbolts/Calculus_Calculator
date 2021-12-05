@@ -130,7 +130,7 @@ function display_expr(expr) {
     return `(${display_expr(expr.operand1)} ^ ${display_expr(expr.operand2)})`;
   }
   if (is_log(expr)) {
-    return `(ln(${display_expr(expr.operand1)}))`;
+    return `ln(${display_expr(expr.operand1)})`;
   }
 
 }
@@ -207,8 +207,8 @@ function basic_simplify_expr(expr) {
     }
     return make_expr(
       expr.type,
-      basic_simplify_expr(part1),
-      basic_simplify_expr(part2)
+      part1,
+      part2
     );
   }
 }
@@ -300,13 +300,16 @@ function derive_power(expr, variable) {
   if (is_number(f) !== true && is_number(g) !== true) {
     console.log("HEEERE")
     const part3 = make_product(make_log(f), g)
-    console.log(part3, "PART3")
+    console.log(display_expr(part3), "PART3")
     const part2 = make_product(expr, derive(part3, "x"))
-    console.log(part2, "PART2")
+    console.log(display_expr(part2), "PART2")
     return part2
   }
 }
-// TODO: FIX THIS
+
+function toView(value) {
+  return JSON.stringify(value, null, 2)
+}
 function derive_log(expr, variable) {
   const f = expr.operand1
   return make_product(make_division(make_number(1), f), derive(f, variable))
@@ -582,8 +585,8 @@ function calculate() {
 }
 
 function render(text) {
-  let newText = document.getElementById("output")
-  newText.innerHTML = text
+  let math = MathJax.Hub.getAllJax("output")[0];
+  MathJax.Hub.Queue(["Text", math, text]);
   console.log(text)
 }
 
@@ -593,11 +596,18 @@ function resetText() {
 }
 
 function parser_derive(str) {
-  return display_expr(basic_simplify_expr(derive(solvePostfix(infixToPostfix(str)), "x")))
+  return display_expr(derive(solvePostfix(infixToPostfix(str)), "x"))
 }
 
 function parser(str) {
   return solvePostfix(infixToPostfix(str));
+}
+
+function latex(str) {
+  let str1 = str.replace("*", "\\cdot")
+  let str2 = str1.replace("/", "\\over")
+  let str3 = str2.replace("ln", "\\ln")
+  return `$${str3}$`
 }
 //console.log(infixToPostfix("6*x^2"))
 //let expr = solvePostfix(infixToPostfix("3*x^3"))
@@ -629,6 +639,7 @@ const fexpr = make_expr(EXPR_TYPE.Power, expr1, number1);
 //console.log(display_expr(expr1))
 //console.log(display_expr(basic_simplify_expr(derive(expr2, "x"))))
 //console.log(display_expr(derive(make_log(x), "x")))
-console.log(display_expr(derive(make_product(make_log(x), x), "x")))
-console.log(parser_derive("2^x"))
+//console.log(display_expr(derive(make_product(make_log(x), x), "x")))
+//console.log(display_expr(derive(make_power(make_product(make_number(2), x), x), "x")))
+//console.log(parser_derive("2^x"))
 console.log(parser_derive("x^x"))
