@@ -313,7 +313,10 @@ function derive_power(expr, variable) {
     return part2
   }
 }
-// TODO: FIX THIS
+
+function toView(value) {
+  return JSON.stringify(value, null, 2)
+}
 function derive_log(expr, variable) {
   const f = expr.operand1
   return make_product(make_division(make_number(1), f), derive(f, variable))
@@ -611,11 +614,8 @@ MathJax = {
 };
 
 function render(text) {
-  const content = document.createElement('span')
-  content.textContent = text
-  const syncTypeset = document.querySelector('#output')
-  syncTypeset.appendChild(content.cloneNode(true))
-  MathJax.typeset()
+  let math = MathJax.Hub.getAllJax("output")[0];
+  MathJax.Hub.Queue(["Text", math, text]);
   console.log(text)
 }
 
@@ -626,7 +626,7 @@ function resetText() {
 }
 
 function parser_derive(str) {
-  return display_expr(derive(solvePostfix(infixToPostfix(str))), "x")
+  return display_expr(derive(solvePostfix(infixToPostfix(str)), "x"))
 }
 
 function parser(str) {
@@ -634,9 +634,10 @@ function parser(str) {
 }
 
 function latex(str) {
-  let str1 = str.replaceAll("*", "\\cdot")
-  let str2 = str1.replaceAll("ln", "\\ln")
-  return `$$${str2}$$`
+  let str1 = str.replace("*", "\\cdot")
+  let str2 = str1.replace("/", "\\over")
+  let str3 = str2.replace("ln", "\\ln")
+  return `$${str3}$`
 }
 //console.log(infixToPostfix("6*x^2"))
 //let expr = solvePostfix(infixToPostfix("3*x^3"))
@@ -671,5 +672,4 @@ const fexpr = make_expr(EXPR_TYPE.Power, expr1, number1);
 //console.log(display_expr(derive(make_product(make_log(x), x), "x")))
 //console.log(display_expr(derive(make_power(make_product(make_number(2), x), x), "x")))
 //console.log(parser_derive("2^x"))
-//console.log(infixToPostfix("5*x+ln(x^2+4)"))
-console.log(parser_derive("e^x"))
+console.log(parser_derive("x^x"))
