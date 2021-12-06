@@ -118,13 +118,13 @@ function display_expr(expr) {
     return `(${display_expr(expr.operand1)} - ${display_expr(expr.operand2)})`;
   }
   if (is_product(expr)) {
-    return `(${display_expr(expr.operand1)} * ${display_expr(expr.operand2)})`;
+    return `(${display_expr(expr.operand1)} \\cdot ${display_expr(expr.operand2)})`;
   }
   if (is_division(expr)) {
-    return `(${display_expr(expr.operand1)} / ${display_expr(expr.operand2)})`;
+    return `(\\frac{${display_expr(expr.operand1)}}{${display_expr(expr.operand2)}})`;
   }
   if (is_power(expr)) {
-    return `(${display_expr(expr.operand1)} ^ ${display_expr(expr.operand2)})`;
+    return `(${display_expr(expr.operand1)} ^ {${display_expr(expr.operand2)}})`;
   }
   if (is_exponential(expr)) {
     return `(${display_expr(expr.operand1)} ^ ${display_expr(expr.operand2)})`;
@@ -579,16 +579,29 @@ function calculate() {
   initialize()
   const element = document.getElementById("strtext")
   console.log(element)
-  let result = parser_derive(element.value)
+  let result = latex(parser_derive(element.value))
   console.log(result)
   render(result)
 }
 
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+
 function render(text) {
-  let math = MathJax.Hub.getAllJax("output")[0];
-  MathJax.Hub.Queue(["Text", math, text]);
+  const content = document.createElement('span')
+  content.textContent = text
+  const syncTypeset = document.querySelector('#output')
+  syncTypeset.appendChild(content.cloneNode(true))
+  MathJax.typeset()
   console.log(text)
 }
+
 
 function resetText() {
   let newText = document.getElementById("output")
@@ -604,10 +617,9 @@ function parser(str) {
 }
 
 function latex(str) {
-  let str1 = str.replace("*", "\\cdot")
-  let str2 = str1.replace("/", "\\over")
-  let str3 = str2.replace("ln", "\\ln")
-  return `$${str3}$`
+  let str1 = str.replaceAll("*", "\\cdot")
+  let str2 = str1.replaceAll("ln", "\\ln")
+  return `$$${str2}$$`
 }
 //console.log(infixToPostfix("6*x^2"))
 //let expr = solvePostfix(infixToPostfix("3*x^3"))
