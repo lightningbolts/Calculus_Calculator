@@ -614,8 +614,11 @@ MathJax = {
 };
 
 function render(text) {
-  let math = MathJax.Hub.getAllJax("output")[0];
-  MathJax.Hub.Queue(["Text", math, text]);
+  const content = document.createElement('span')
+  content.textContent = text
+  const syncTypeset = document.querySelector('#output')
+  syncTypeset.appendChild(content.cloneNode(true))
+  MathJax.typeset()
   console.log(text)
 }
 
@@ -634,10 +637,9 @@ function parser(str) {
 }
 
 function latex(str) {
-  let str1 = str.replace("*", "\\cdot")
-  let str2 = str1.replace("/", "\\over")
-  let str3 = str2.replace("ln", "\\ln")
-  return `$${str3}$`
+  let str1 = str.replaceAll("*", "\\cdot")
+  let str2 = str1.replaceAll("ln", "\\ln")
+  return `$$${str2}$$`
 }
 //console.log(infixToPostfix("6*x^2"))
 //let expr = solvePostfix(infixToPostfix("3*x^3"))
