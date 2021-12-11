@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<link rel="stylesheet" href="style.css">
+<!--<link rel="stylesheet" href="style.css">-->
 
 <script type="text/javascript" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 <script src="script.js"></script>
@@ -18,23 +18,12 @@
     <h1 class="Calc">Calculator</h1>
     </div>
 
-    <head>
-      <title>MathJax TeX Test Page</title>
-
-    </head>
-
-    <body>
-
-      When \(a \ne 0\), there are two solutions to \(ax^2 + bx + c = 0\) and they are
-      $$x = {-b \pm \sqrt{b^2-4ac} \over 2a}.$$
-    </body>
-
-    <div>
+    <div class="Calc">
       <label for="strtext">Type in here:</label><br>
       <input type="text" id="strtext">
       <input type="submit" onclick="calculate()" value="Calculate!">
     </div>
-    <div id="output">
+    <div id="output" class="Calc">
       The answer you provided is: \({}\).
     </div>
     <nav id="navbar">

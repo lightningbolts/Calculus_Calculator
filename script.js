@@ -629,7 +629,7 @@ function resetText() {
 }
 
 function parser_derive(str) {
-  return display_expr(derive(solvePostfix(infixToPostfix(str)), "x"))
+  return display_expr(derive(solvePostfix(infixToPostfix(str))), "x")
 }
 
 function parser(str) {
@@ -674,4 +674,5 @@ const fexpr = make_expr(EXPR_TYPE.Power, expr1, number1);
 //console.log(display_expr(derive(make_product(make_log(x), x), "x")))
 //console.log(display_expr(derive(make_power(make_product(make_number(2), x), x), "x")))
 //console.log(parser_derive("2^x"))
-console.log(parser_derive("x^x"))
+//console.log(infixToPostfix("5*x+ln(x^2+4)"))
+console.log(parser_derive("e^x"))
