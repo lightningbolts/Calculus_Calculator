@@ -75,7 +75,7 @@ function derive(expr, variable) {
     return make_number(0);
   }
   if (is_variable(expr)) {
-    return expr.operand1 === variable ? make_number(1) : make_number(0);
+    return make_number(1);
   }
   if (is_sum(expr)) {
     return derive_sum(expr, variable);
@@ -225,6 +225,10 @@ function basic_simplify_expr(expr) {
   }
 }*/
 
+function simplify(expr) {
+
+}
+
 //---------------------------------------
 //These functions list the different types of directions for the
 //different types of expressions.
@@ -281,7 +285,10 @@ function derive_power(expr, variable) {
   //console.log(gp)
   const fp = derive(f, variable);
   //console.log(fp)
-  if (is_number(g)) {
+  if (is_number(g) && is_number(f)) {
+    return make_number(f ^ g)
+  }
+  if (is_number(g) && !is_number(f)) {
     const part1 = make_product(g, fp);
     const part2 = make_product(
       part1,
@@ -290,11 +297,11 @@ function derive_power(expr, variable) {
     return part2;
   }
   if (is_number(f) && is_number(g) !== true) {
-    const part1 = make_product(
+    /*const part1 = make_product(
       make_number(special_functions("ln", parseFloat(display_expr(f)))),
       expr
-    );
-    const part2 = make_product(part1, gp);
+    );*/
+    const part2 = make_product(make_product(make_log(f), expr), gp);
     return part2;
   }
   if (is_number(f) !== true && is_number(g) !== true) {
@@ -485,6 +492,10 @@ const infixToPostfix = (infix) => {
   var outputQueue = "";
   var operatorStack = [];
   var operators = {
+    "ln": {
+      precedence: 5,
+      associativity: "Right"
+    },
     "^": {
       precedence: 4,
       associativity: "Right"
@@ -508,14 +519,17 @@ const infixToPostfix = (infix) => {
   }
   infix = infix.replace(/\s+/g, "");
   infix = infix.split(/([\+\-\*\/\^\(\)])/).clean();
+  console.log(infix)
   for (var i = 0; i < infix.length; i++) {
     var token = infix[i];
-    if (token.isNumeric() || /^[A-Za-z]+$/.test(token)) {
+    if (token.isNumeric() || /^[x]+$/.test(token)) {
       outputQueue += token + " ";
-    } else if ("^*/+-".indexOf(token) !== -1) {
+    } else if (token === "e") {
+      outputQueue += token + " "
+    } else if ("ln^*/+-".indexOf(token) !== -1) {
       var o1 = token;
       var o2 = operatorStack[operatorStack.length - 1];
-      while ("^*/+-".indexOf(o2) !== -1 && ((operators[o1].associativity === "Left" && operators[o1].precedence <= operators[o2].precedence) || (operators[o1].associativity === "Right" && operators[o1].precedence < operators[o2].precedence))) {
+      while ("ln^*/+-".indexOf(o2) !== -1 && ((operators[o1].associativity === "Left" && operators[o1].precedence <= operators[o2].precedence) || (operators[o1].associativity === "Right" && operators[o1].precedence < operators[o2].precedence))) {
         outputQueue += operatorStack.pop() + " ";
         o2 = operatorStack[operatorStack.length - 1];
       }
@@ -544,11 +558,17 @@ const solvePostfix = (postfix) => {
     } else {
       if (postfix[i] === "x") {
         resultStack.push(make_variable(postfix[i]))
+      } else if (postfix[i] === "e") {
+        resultStack.push(make_number(postfix[i]))
+      } else if (postfix[i] === "ln") {
+        var a = resultStack.pop();
+        console.log(a, "aaaaaaaaaaaaa")
+        resultStack.push(make_log(a))
       } else {
         var a = resultStack.pop();
-        //console.log(a, "aaaaaaaaaaaaa")
+        console.log(a, "aaaaaaaaaaaaa")
         var b = resultStack.pop();
-        //console.log(b, "bbbbbbbbbbbb")
+        console.log(b, "bbbbbbbbbbbb")
         if (postfix[i] === "+") {
           resultStack.push(make_sum(b, a));
         } else if (postfix[i] === "-") {
@@ -609,7 +629,7 @@ function resetText() {
 }
 
 function parser_derive(str) {
-  return display_expr(derive(solvePostfix(infixToPostfix(str)), "x"))
+  return display_expr(derive(solvePostfix(infixToPostfix(str))), "x")
 }
 
 function parser(str) {
@@ -654,4 +674,5 @@ const fexpr = make_expr(EXPR_TYPE.Power, expr1, number1);
 //console.log(display_expr(derive(make_product(make_log(x), x), "x")))
 //console.log(display_expr(derive(make_power(make_product(make_number(2), x), x), "x")))
 //console.log(parser_derive("2^x"))
-console.log(parser_derive("x^x"))
+//console.log(infixToPostfix("5*x+ln(x^2+4)"))
+console.log(parser_derive("e^x"))

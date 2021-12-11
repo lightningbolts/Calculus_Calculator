@@ -7,11 +7,10 @@ body {
   line-height: 1.5;
 }
 
-div {
+.Calc {
   position: absolute;
   margin-left: 310px;
   padding: 20px;
-  margin-bottom: 110px;
 }
 
 #navbar {
