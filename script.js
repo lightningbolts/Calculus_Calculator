@@ -118,16 +118,13 @@ function display_expr(expr) {
     return `(${display_expr(expr.operand1)} - ${display_expr(expr.operand2)})`;
   }
   if (is_product(expr)) {
-    return `(${display_expr(expr.operand1)} \\cdot ${display_expr(expr.operand2)})`;
+    return `${display_expr(expr.operand1)} \\cdot ${display_expr(expr.operand2)}`;
   }
   if (is_division(expr)) {
     return `(\\frac{${display_expr(expr.operand1)}}{${display_expr(expr.operand2)}})`;
   }
   if (is_power(expr)) {
-    return `(${display_expr(expr.operand1)} ^ {${display_expr(expr.operand2)}})`;
-  }
-  if (is_exponential(expr)) {
-    return `(${display_expr(expr.operand1)} ^ ${display_expr(expr.operand2)})`;
+    return `${display_expr(expr.operand1)} ^ {${display_expr(expr.operand2)}}`;
   }
   if (is_log(expr)) {
     return `ln(${display_expr(expr.operand1)})`;
@@ -136,82 +133,8 @@ function display_expr(expr) {
 }
 
 //---------------------------------------
-/*Basic_Simplify_Expr simplifies the mathematical expression (object) partially
+/*simplify simplifies the mathematical expression (object) partially
 before it is converted into a readable expression. (incomplete)*/
-
-function basic_simplify_expr(expr) {
-  if (is_number(expr)) {
-    return expr;
-  }
-  if (is_variable(expr)) {
-    return expr;
-  }
-  // expr is either a sum/minus, or product/division, or power
-  const part1 = basic_simplify_expr(expr.operand1);
-  const part2 = basic_simplify_expr(expr.operand2);
-  if (is_number(part1) && is_number(part2)) {
-    const p1v = part1.operand1;
-    const p2v = part2.operand1;
-    let result;
-    if (expr.type === EXPR_TYPE.Sum) {
-      result = p1v + p2v;
-      return make_number(result);
-    }
-    if (expr.type === EXPR_TYPE.Minus) {
-      result = p1v - p2v;
-      return make_number(result)
-    }
-    if (expr.type === EXPR_TYPE.Product) {
-      result = p1v * p2v;
-      return make_number(result);
-    }
-    if (expr.type === EXPR_TYPE.Division) {
-      result = p1v / p2v
-      return make_number(result)
-    }
-    if (expr.type === EXPR_TYPE.Power || expr.type === EXPR_TYPE.Exponential) {
-      result = p1v ^ p2v;
-      return make_number(result);
-    }
-  } else {
-    if (is_number(part1) && part1.operand1 === 0) {
-      if (expr.type === EXPR_TYPE.Sum) {
-        return basic_simplify_expr(part2);
-      }
-      if (expr.type === EXPR_TYPE.Product) {
-        return make_number(0);
-      }
-      if (
-        expr.type === EXPR_TYPE.Power ||
-        expr.type === EXPR_TYPE.Exponential
-      ) {
-        if (is_number(part2) && part2.operand1 === 0) {
-          return make_number(1);
-        }
-        return make_number(0);
-      }
-    }
-    if (is_number(part2) && part2.operand1 === 0) {
-      if (expr.type === EXPR_TYPE.Sum) {
-        return basic_simplify_expr(part1);
-      }
-      if (expr.type === EXPR_TYPE.Product) {
-        return make_number(0);
-      }
-      if (
-        expr.type === EXPR_TYPE.Power ||
-        expr.type === EXPR_TYPE.Exponential
-      ) {
-        return make_number(1);
-      }
-    }
-    return make_expr(
-      expr.type,
-      part1,
-      part2
-    );
-  }
-}
 
 /*function basic_simplify_expr1(expr) {
   switch (expr) {
@@ -226,7 +149,109 @@ function basic_simplify_expr(expr) {
 }*/
 
 function simplify(expr) {
-
+  if (is_number(expr)) {
+    return expr
+  }
+  if (is_variable(expr)) {
+    return expr
+  }
+  //TODO, fix e anomaly, "ln(e^2)*x => ln(2) when it should be => 2" 
+  if (is_log(expr)) {
+    const op1 = simplify(expr.operand1)
+    return make_log(op1)
+  }
+  const part1 = simplify(expr.operand1)
+  const part2 = simplify(expr.operand2)
+  if (is_number(part1) && is_number(part2)) {
+    const p1v = part1.operand1;
+    const p2v = part2.operand1;
+    let result;
+    if (is_sum(expr)) {
+      result = p1v + p2v;
+      return make_number(result);
+    }
+    if (is_minus(expr)) {
+      result = p1v - p2v;
+      return make_number(result)
+    }
+    if (is_product(expr)) {
+      result = p1v * p2v;
+      return make_number(result);
+    }
+    if (is_division(expr)) {
+      result = p1v / p2v
+      return make_number(result)
+    }
+    if (is_power(expr)) {
+      result = p1v ^ p2v;
+      return make_number(result);
+    }
+  } else if (is_number(part1) && !is_number(part2)) {
+    if (part1.operand1 === 0) {
+      if (is_sum(expr)) {
+        return simplify(part2)
+      }
+      if (is_minus(expr)) {
+        return simplify(make_product(make_number(-1), part2))
+      }
+      if (is_product(expr) || is_division(expr) || is_power(expr)) {
+        return make_number(0)
+      }
+    }
+    if (part1.operand1 === 1) {
+      if (is_sum(expr)) {
+        return make_expr(expr.type, part1, part2)
+      }
+      if (is_minus(expr)) {
+        return make_expr(expr.type, part1, part2)
+      }
+      if (is_product(expr)) {
+        return simplify(part2)
+      }
+      if (is_division(expr)) {
+        return make_expr(expr.type, part1, part2)
+      }
+      if (is_power(make_expr(expr.type, part1, part2))) {
+        return make_number(1)
+      }
+    }
+    return make_expr(expr.type, part1, part2)
+  } else if (is_number(part2) && !is_number(part1)) {
+    if (part2.operand1 === 0) {
+      if (is_sum(expr) || is_minus(expr)) {
+        return simplify(part1)
+      }
+      if (is_product(make_expr(expr.type, part1, part2))) {
+        return make_number(0)
+      }
+      if (is_division(expr)) {
+        return Error("You cannot divide by zero")
+      }
+      if (is_power(expr)) {
+        return make_number(1)
+      }
+    }
+    if (part2.operand1 === 1) {
+      if (is_sum(expr)) {
+        return make_expr(expr.type, part1, part2)
+      }
+      if (is_minus(expr)) {
+        return make_expr(expr.type, part1, part2)
+      }
+      if (is_product(expr)) {
+        return simplify(part1)
+      }
+      if (is_division(expr)) {
+        return simplify(part1)
+      }
+      if (is_power(expr)) {
+        return simplify(part1)
+      }
+    }
+    return make_expr(expr.type, part1, part2)
+  } else {
+    return make_expr(expr.type, part1, part2)
+  }
 }
 
 //---------------------------------------
@@ -286,25 +311,24 @@ function derive_power(expr, variable) {
   const fp = derive(f, variable);
   //console.log(fp)
   if (is_number(g) && is_number(f)) {
-    return make_number(f ^ g)
-  }
-  if (is_number(g) && !is_number(f)) {
+    return make_number(make_power(f, g))
+  } else if (is_number(g) && !is_number(f)) {
+    console.log("HEEERE222222")
     const part1 = make_product(g, fp);
     const part2 = make_product(
       part1,
       make_power(f, make_sum(g, make_number(-1)))
     );
     return part2;
-  }
-  if (is_number(f) && is_number(g) !== true) {
+  } else if (is_number(f) && is_number(g) !== true) {
     /*const part1 = make_product(
       make_number(special_functions("ln", parseFloat(display_expr(f)))),
       expr
     );*/
+    console.log("HEEERE11111")
     const part2 = make_product(make_product(make_log(f), expr), gp);
     return part2;
-  }
-  if (is_number(f) !== true && is_number(g) !== true) {
+  } else if (is_number(f) !== true && is_number(g) !== true) {
     console.log("HEEERE")
     const part3 = make_product(make_log(f), g)
     console.log(display_expr(part3), "PART3")
@@ -314,9 +338,6 @@ function derive_power(expr, variable) {
   }
 }
 
-function toView(value) {
-  return JSON.stringify(value, null, 2)
-}
 function derive_log(expr, variable) {
   const f = expr.operand1
   return make_product(make_division(make_number(1), f), derive(f, variable))
@@ -563,22 +584,22 @@ const solvePostfix = (postfix) => {
       } else if (postfix[i] === "ln") {
         var a = resultStack.pop();
         console.log(a, "aaaaaaaaaaaaa")
-        resultStack.push(make_log(a))
+        resultStack.push(simplify(make_log(a)))
       } else {
         var a = resultStack.pop();
         console.log(a, "aaaaaaaaaaaaa")
         var b = resultStack.pop();
         console.log(b, "bbbbbbbbbbbb")
         if (postfix[i] === "+") {
-          resultStack.push(make_sum(b, a));
+          resultStack.push(simplify(make_sum(b, a)));
         } else if (postfix[i] === "-") {
-          resultStack.push(make_minus(b, a));
+          resultStack.push(simplify(make_minus(b, a)));
         } else if (postfix[i] === "*") {
-          resultStack.push(make_product(b, a));
+          resultStack.push(simplify(make_product(b, a)));
         } else if (postfix[i] === "/") {
-          resultStack.push(make_division(b, a));
+          resultStack.push(simplify(make_division(b, a)));
         } else if (postfix[i] === "^") {
-          resultStack.push(make_power(b, a));
+          resultStack.push(simplify(make_power(b, a)));
         }
       }
     }
@@ -629,7 +650,7 @@ function resetText() {
 }
 
 function parser_derive(str) {
-  return display_expr(derive(solvePostfix(infixToPostfix(str))), "x")
+  return display_expr(simplify(derive(solvePostfix(infixToPostfix(str))), "x"))
 }
 
 function parser(str) {
