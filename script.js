@@ -75,7 +75,7 @@ function derive(expr, variable) {
     return make_number(0);
   }
   if (is_variable(expr)) {
-    return expr.operand1 === variable ? make_number(1) : make_number(0);
+    return make_number(1);
   }
   if (is_sum(expr)) {
     return derive_sum(expr, variable);
@@ -118,19 +118,19 @@ function display_expr(expr) {
     return `(${display_expr(expr.operand1)} - ${display_expr(expr.operand2)})`;
   }
   if (is_product(expr)) {
-    return `(${display_expr(expr.operand1)} * ${display_expr(expr.operand2)})`;
+    return `(${display_expr(expr.operand1)} \\cdot ${display_expr(expr.operand2)})`;
   }
   if (is_division(expr)) {
-    return `(${display_expr(expr.operand1)} / ${display_expr(expr.operand2)})`;
+    return `(\\frac{${display_expr(expr.operand1)}}{${display_expr(expr.operand2)}})`;
   }
   if (is_power(expr)) {
-    return `(${display_expr(expr.operand1)} ^ ${display_expr(expr.operand2)})`;
+    return `(${display_expr(expr.operand1)} ^ {${display_expr(expr.operand2)}})`;
   }
   if (is_exponential(expr)) {
     return `(${display_expr(expr.operand1)} ^ ${display_expr(expr.operand2)})`;
   }
   if (is_log(expr)) {
-    return `(ln(${display_expr(expr.operand1)}))`;
+    return `ln(${display_expr(expr.operand1)})`;
   }
 
 }
@@ -207,8 +207,8 @@ function basic_simplify_expr(expr) {
     }
     return make_expr(
       expr.type,
-      basic_simplify_expr(part1),
-      basic_simplify_expr(part2)
+      part1,
+      part2
     );
   }
 }
@@ -224,6 +224,10 @@ function basic_simplify_expr(expr) {
       return "Object Error";
   }
 }*/
+
+function simplify(expr) {
+
+}
 
 //---------------------------------------
 //These functions list the different types of directions for the
@@ -281,7 +285,10 @@ function derive_power(expr, variable) {
   //console.log(gp)
   const fp = derive(f, variable);
   //console.log(fp)
-  if (is_number(g)) {
+  if (is_number(g) && is_number(f)) {
+    return make_number(f ^ g)
+  }
+  if (is_number(g) && !is_number(f)) {
     const part1 = make_product(g, fp);
     const part2 = make_product(
       part1,
@@ -290,23 +297,26 @@ function derive_power(expr, variable) {
     return part2;
   }
   if (is_number(f) && is_number(g) !== true) {
-    const part1 = make_product(
+    /*const part1 = make_product(
       make_number(special_functions("ln", parseFloat(display_expr(f)))),
       expr
-    );
-    const part2 = make_product(part1, gp);
+    );*/
+    const part2 = make_product(make_product(make_log(f), expr), gp);
     return part2;
   }
   if (is_number(f) !== true && is_number(g) !== true) {
     console.log("HEEERE")
     const part3 = make_product(make_log(f), g)
-    console.log(part3, "PART3")
+    console.log(display_expr(part3), "PART3")
     const part2 = make_product(expr, derive(part3, "x"))
-    console.log(part2, "PART2")
+    console.log(display_expr(part2), "PART2")
     return part2
   }
 }
 
+function toView(value) {
+  return JSON.stringify(value, null, 2)
+}
 function derive_log(expr, variable) {
   const f = expr.operand1
   return make_product(make_division(make_number(1), f), derive(f, variable))
@@ -482,6 +492,10 @@ const infixToPostfix = (infix) => {
   var outputQueue = "";
   var operatorStack = [];
   var operators = {
+    "ln": {
+      precedence: 5,
+      associativity: "Right"
+    },
     "^": {
       precedence: 4,
       associativity: "Right"
@@ -505,14 +519,17 @@ const infixToPostfix = (infix) => {
   }
   infix = infix.replace(/\s+/g, "");
   infix = infix.split(/([\+\-\*\/\^\(\)])/).clean();
+  console.log(infix)
   for (var i = 0; i < infix.length; i++) {
     var token = infix[i];
-    if (token.isNumeric() || /^[A-Za-z]+$/.test(token)) {
+    if (token.isNumeric() || /^[x]+$/.test(token)) {
       outputQueue += token + " ";
-    } else if ("^*/+-".indexOf(token) !== -1) {
+    } else if (token === "e") {
+      outputQueue += token + " "
+    } else if ("ln^*/+-".indexOf(token) !== -1) {
       var o1 = token;
       var o2 = operatorStack[operatorStack.length - 1];
-      while ("^*/+-".indexOf(o2) !== -1 && ((operators[o1].associativity === "Left" && operators[o1].precedence <= operators[o2].precedence) || (operators[o1].associativity === "Right" && operators[o1].precedence < operators[o2].precedence))) {
+      while ("ln^*/+-".indexOf(o2) !== -1 && ((operators[o1].associativity === "Left" && operators[o1].precedence <= operators[o2].precedence) || (operators[o1].associativity === "Right" && operators[o1].precedence < operators[o2].precedence))) {
         outputQueue += operatorStack.pop() + " ";
         o2 = operatorStack[operatorStack.length - 1];
       }
@@ -541,11 +558,17 @@ const solvePostfix = (postfix) => {
     } else {
       if (postfix[i] === "x") {
         resultStack.push(make_variable(postfix[i]))
+      } else if (postfix[i] === "e") {
+        resultStack.push(make_number(postfix[i]))
+      } else if (postfix[i] === "ln") {
+        var a = resultStack.pop();
+        console.log(a, "aaaaaaaaaaaaa")
+        resultStack.push(make_log(a))
       } else {
         var a = resultStack.pop();
-        //console.log(a, "aaaaaaaaaaaaa")
+        console.log(a, "aaaaaaaaaaaaa")
         var b = resultStack.pop();
-        //console.log(b, "bbbbbbbbbbbb")
+        console.log(b, "bbbbbbbbbbbb")
         if (postfix[i] === "+") {
           resultStack.push(make_sum(b, a));
         } else if (postfix[i] === "-") {
@@ -576,16 +599,29 @@ function calculate() {
   initialize()
   const element = document.getElementById("strtext")
   console.log(element)
-  let result = parser_derive(element.value)
+  let result = latex(parser_derive(element.value))
   console.log(result)
   render(result)
 }
 
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+
 function render(text) {
-  let newText = document.getElementById("output")
-  newText.innerHTML = text
+  const content = document.createElement('span')
+  content.textContent = text
+  const syncTypeset = document.querySelector('#output')
+  syncTypeset.appendChild(content.cloneNode(true))
+  MathJax.typeset()
   console.log(text)
 }
+
 
 function resetText() {
   let newText = document.getElementById("output")
@@ -593,11 +629,17 @@ function resetText() {
 }
 
 function parser_derive(str) {
-  return display_expr(basic_simplify_expr(derive(solvePostfix(infixToPostfix(str)), "x")))
+  return display_expr(derive(solvePostfix(infixToPostfix(str))), "x")
 }
 
 function parser(str) {
   return solvePostfix(infixToPostfix(str));
+}
+
+function latex(str) {
+  let str1 = str.replaceAll("*", "\\cdot")
+  let str2 = str1.replaceAll("ln", "\\ln")
+  return `$$${str2}$$`
 }
 //console.log(infixToPostfix("6*x^2"))
 //let expr = solvePostfix(infixToPostfix("3*x^3"))
@@ -629,6 +671,8 @@ const fexpr = make_expr(EXPR_TYPE.Power, expr1, number1);
 //console.log(display_expr(expr1))
 //console.log(display_expr(basic_simplify_expr(derive(expr2, "x"))))
 //console.log(display_expr(derive(make_log(x), "x")))
-console.log(display_expr(derive(make_product(make_log(x), x), "x")))
-console.log(parser_derive("2^x"))
-console.log(parser_derive("x^x"))
+//console.log(display_expr(derive(make_product(make_log(x), x), "x")))
+//console.log(display_expr(derive(make_power(make_product(make_number(2), x), x), "x")))
+//console.log(parser_derive("2^x"))
+//console.log(infixToPostfix("5*x+ln(x^2+4)"))
+console.log(parser_derive("e^x"))
