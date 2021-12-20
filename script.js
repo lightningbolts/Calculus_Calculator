@@ -66,6 +66,30 @@ function is_log(expr) {
   return is_Expr_Certain_Type(expr, EXPR_TYPE.Log);
 }
 
+function is_sin(expr) {
+  return is_Expr_Certain_Type(expr, EXPR_TYPE.Sin)
+}
+
+function is_cos(expr) {
+  return is_Expr_Certain_Type(expr, EXPR_TYPE.Cos)
+}
+
+function is_tan(expr) {
+  return is_Expr_Certain_Type(expr, EXPR_TYPE.Tan)
+}
+
+function is_arcsin(expr) {
+  return is_Expr_Certain_Type(expr, EXPR_TYPE.Arcsin)
+}
+
+function is_arccos(expr) {
+  return is_Expr_Certain_Type(expr, EXPR_TYPE.Arccos)
+}
+
+function is_arctan(expr) {
+  return is_Expr_Certain_Type(expr, EXPR_TYPE.Arctan)
+}
+
 //---------------------------------------
 //Derive is the central highway that leads to different formulas for
 //different derivatives for different expressions.
@@ -98,6 +122,24 @@ function derive(expr, variable) {
   if (is_log(expr)) {
     return derive_log(expr, variable);
   }
+  if (is_sin(expr)) {
+    return derive_sin(expr, variable);
+  }
+  if (is_cos(expr)) {
+    return derive_cos(expr, variable);
+  }
+  if (is_tan(expr)) {
+    return derive_tan(expr, variable);
+  }
+  if (is_arcsin(expr)) {
+    return derive_arcsin(expr, variable);
+  }
+  if (is_arccos(expr)) {
+    return derive_arccos(expr, variable);
+  }
+  if (is_arctan(expr)) {
+    return derive_arctan(expr, variable);
+  }
   return Error;
 }
 
@@ -112,24 +154,45 @@ function display_expr(expr) {
     return expr.operand1;
   }
   if (is_sum(expr)) {
-    return `(${display_expr(expr.operand1)} + ${display_expr(expr.operand2)})`;
+    return `\\left( ${display_expr(expr.operand1)} + ${display_expr(expr.operand2)} \\right) `;
   }
   if (is_minus(expr)) {
-    return `(${display_expr(expr.operand1)} - ${display_expr(expr.operand2)})`;
+    return `\\left( ${display_expr(expr.operand1)} - ${display_expr(expr.operand2)} \\right)`;
   }
   if (is_product(expr)) {
     return `${display_expr(expr.operand1)} \\cdot ${display_expr(expr.operand2)}`;
   }
   if (is_division(expr)) {
-    return `(\\frac{${display_expr(expr.operand1)}}{${display_expr(expr.operand2)}})`;
+    return `\\left( \\frac{${display_expr(expr.operand1)}}{${display_expr(expr.operand2)}} \\right)`;
   }
   if (is_power(expr)) {
+    console.log(expr)
+    if (expr.operand2.operand1 === 0.5) {
+      return `\\sqrt{${display_expr(expr.operand1)}}`;
+    }
     return `${display_expr(expr.operand1)} ^ {${display_expr(expr.operand2)}}`;
   }
   if (is_log(expr)) {
-    return `ln(${display_expr(expr.operand1)})`;
+    return `\\ln \\left( ${display_expr(expr.operand1)} \\right)`;
   }
-
+  if (is_sin(expr)) {
+    return `\\sin \\left( ${display_expr(expr.operand1)} \\right)`;
+  }
+  if (is_cos(expr)) {
+    return `\\cos \\left( ${display_expr(expr.operand1)} \\right)`;
+  }
+  if (is_tan(expr)) {
+    return `\\tan \\left( ${display_expr(expr.operand1)} \\right)`;
+  }
+  if (is_arcsin(expr)) {
+    return `\\arcsin \\left( ${display_expr(expr.operand1)} \\right)`;
+  }
+  if (is_arccos(expr)) {
+    return `\\arccos \\left( ${display_expr(expr.operand1)} \\right)`;
+  }
+  if (is_arctan(expr)) {
+    return `\\arctan \\left( ${display_expr(expr.operand1)} \\right)`;
+  }
 }
 
 //---------------------------------------
@@ -155,10 +218,42 @@ function simplify(expr) {
   if (is_variable(expr)) {
     return expr
   }
-  //TODO, fix e anomaly, "ln(e^2)*x => ln(2) when it should be => 2" 
+
   if (is_log(expr)) {
     const op1 = simplify(expr.operand1)
+    //console.log(expr, "EXPR")
+    //console.log(op1, "This is op1")
+    //console.log(op1.operand1, "This is op1.operand1")
+    //console.log(op1.operand2, "This is op1.operand2")
+    if (is_power(op1) && op1.operand1.operand1 === "e") {
+      console.log("MARKER?")
+      return op1.operand2
+    }
     return make_log(op1)
+  }
+  if (is_sin(expr)) {
+    const op1 = simplify(expr.operand1)
+    return make_sin(op1)
+  }
+  if (is_cos(expr)) {
+    const op1 = simplify(expr.operand1)
+    return make_cos(op1)
+  }
+  if (is_tan(expr)) {
+    const op1 = simplify(expr.operand1)
+    return make_tan(op1)
+  }
+  if (is_arcsin(expr)) {
+    const op1 = simplify(expr.operand1)
+    return make_arcsin(op1)
+  }
+  if (is_arccos(expr)) {
+    const op1 = simplify(expr.operand1)
+    return make_arccos(op1)
+  }
+  if (is_arctan(expr)) {
+    const op1 = simplify(expr.operand1)
+    return make_arctan(op1)
   }
   const part1 = simplify(expr.operand1)
   const part2 = simplify(expr.operand2)
@@ -167,22 +262,37 @@ function simplify(expr) {
     const p2v = part2.operand1;
     let result;
     if (is_sum(expr)) {
+      if (p1v === "e" || p2v === "e") {
+        return make_expr(expr.type, part1, part2)
+      }
       result = p1v + p2v;
       return make_number(result);
     }
     if (is_minus(expr)) {
+      if (p1v === "e" || p2v === "e") {
+        return make_expr(expr.type, part1, part2)
+      }
       result = p1v - p2v;
       return make_number(result)
     }
     if (is_product(expr)) {
+      if (p1v === "e" || p2v === "e") {
+        return make_expr(expr.type, part1, part2)
+      }
       result = p1v * p2v;
       return make_number(result);
     }
     if (is_division(expr)) {
+      if (p1v === "e" || p2v === "e") {
+        return make_expr(expr.type, part1, part2)
+      }
       result = p1v / p2v
       return make_number(result)
     }
     if (is_power(expr)) {
+      if (p1v === "e" || p2v === "e") {
+        return make_expr(expr.type, part1, part2)
+      }
       result = p1v ^ p2v;
       return make_number(result);
     }
@@ -254,6 +364,27 @@ function simplify(expr) {
   }
 }
 
+function binary_simplify_degree(expr) {
+  //if the expr.operand1 and expr.operand2 are not numbers
+  let op1 = expr.operand1
+  let op2 = expr.operand2
+  //if op1 and op2 are the same degree, simplify by operator
+  // 2*x^3 + 4*x^3 => 6*x^3
+  if (same_structure(op1, op2)) {
+    if (is_sum(expr)) {
+      return make_product(make_sum(),)
+    }
+  }
+}
+
+function same_structure(op1, op2) {
+
+}
+
+function same_operator(op1, op2) {
+  return op1.type === op2.type
+}
+
 //---------------------------------------
 //These functions list the different types of directions for the
 //different types of expressions.
@@ -311,9 +442,12 @@ function derive_power(expr, variable) {
   const fp = derive(f, variable);
   //console.log(fp)
   if (is_number(g) && is_number(f)) {
+    if (g.operand1 === "e") {
+      return make_power(make_number(Math.E), f)
+    }
     return make_number(make_power(f, g))
   } else if (is_number(g) && !is_number(f)) {
-    console.log("HEEERE222222")
+    //console.log("HEEERE222222")
     const part1 = make_product(g, fp);
     const part2 = make_product(
       part1,
@@ -325,11 +459,11 @@ function derive_power(expr, variable) {
       make_number(special_functions("ln", parseFloat(display_expr(f)))),
       expr
     );*/
-    console.log("HEEERE11111")
+    //console.log("HEEERE11111")
     const part2 = make_product(make_product(make_log(f), expr), gp);
     return part2;
   } else if (is_number(f) !== true && is_number(g) !== true) {
-    console.log("HEEERE")
+    c//onsole.log("HEEERE")
     const part3 = make_product(make_log(f), g)
     console.log(display_expr(part3), "PART3")
     const part2 = make_product(expr, derive(part3, "x"))
@@ -338,25 +472,52 @@ function derive_power(expr, variable) {
   }
 }
 
+function toView(value) {
+  return JSON.stringify(value, null, 2)
+}
 function derive_log(expr, variable) {
   const f = expr.operand1
   return make_product(make_division(make_number(1), f), derive(f, variable))
 }
 
-/*function derive_exponential(expr, variable) {
-  // expr = f ^ g (f is constant)
-  // expr' = ln(f) * (f ^ g) * gp
-  const f = expr.operand1;
-  const g = expr.operand2;
-  const gp = derive(g, variable);
-  const part1 = make_product(
-    make_number(special_functions("ln", parseFloat(display_expr(f)))),
-    make_exponential(f, g)
-  );
-  const part2 = make_product(part1, gp);
-  return part2;
-}*/
+function derive_sin(expr, variable) {
+  const f = expr.operand1
+  console.log(display_expr(make_product(make_cos(f), derive(f, variable))))
+  return make_product(make_cos(f), derive(f, variable))
+}
 
+function derive_cos(expr, variable) {
+  const f = expr.operand1
+  console.log(display_expr(make_product(make_product(make_number(-1), make_sin(f)), derive(f, variable))))
+  return make_product(make_product(make_number(-1), make_sin(f)), derive(f, variable))
+}
+
+function derive_tan(expr, variable) {
+  const f = expr.operand1
+  console.log(display_expr(make_product(make_power(make_division(make_number(1), make_cos(f)), make_number(2)), derive(f, variable))))
+  return make_product(make_power(make_division(make_number(1), make_cos(f)), make_number(2)), derive(f, variable))
+}
+
+function derive_arcsin(expr, variable) {
+  const f = expr.operand1
+  const expr1 = make_division(make_number(1), make_power(make_minus(make_number(1), make_power(make_variable("x"), make_number(2))), make_division(make_number(1), make_number(2))))
+  console.log(display_expr(make_product(expr1, derive(f, variable))))
+  return make_product(expr1, derive(f, variable))
+}
+
+function derive_arccos(expr, variable) {
+  const f = expr.operand1
+  const expr1 = make_division(make_number(-1), make_power(make_minus(make_number(1), make_power(make_variable("x"), make_number(2))), make_division(make_number(1), make_number(2))))
+  console.log(display_expr(make_product(expr1, derive(f, variable))))
+  return make_product(expr1, derive(f, variable))
+}
+
+function derive_arctan(expr, variable) {
+  const f = expr.operand1
+  const expr1 = make_division(make_number(1), make_sum(make_number(1), make_power(make_variable("x"), make_number(2))))
+  console.log(display_expr(make_product(expr1, derive(f, variable))))
+  return make_product(expr1, derive(f, variable))
+}
 //---------------------------------------
 //Special_functions will soon be able to list all the special functions.
 
@@ -414,6 +575,30 @@ function make_log(operand1) {
   return make_expr(EXPR_TYPE.Log, operand1);
 }
 
+function make_sin(operand1) {
+  return make_expr(EXPR_TYPE.Sin, operand1)
+}
+
+function make_cos(operand1) {
+  return make_expr(EXPR_TYPE.Cos, operand1)
+}
+
+function make_tan(operand1) {
+  return make_expr(EXPR_TYPE.Tan, operand1)
+}
+
+function make_arcsin(operand1) {
+  return make_expr(EXPR_TYPE.Arcsin, operand1)
+}
+
+function make_arccos(operand1) {
+  return make_expr(EXPR_TYPE.Arccos, operand1)
+}
+
+function make_arctan(operand1) {
+  return make_expr(EXPR_TYPE.Arctan, operand1)
+}
+
 function make_expr(type, operand1, operand2) {
   return {
     type,
@@ -426,22 +611,21 @@ function make_expr(type, operand1, operand2) {
 //These objects define the types of expressions. 
 
 const num_expr = { type: EXPR_TYPE.Number, operand1: 0 };
-
 const variable_expr = { type: EXPR_TYPE.Variable, operand1: "x" };
-
 const sum_expr = { type: EXPR_TYPE.Sum, operand1: null, operand2: null };
-
 const minus_expr = { type: EXPR_TYPE.Sum, operand1: null, operand2: null };
-
 const power_expr = { type: EXPR_TYPE.Power, operand1: null, operand2: null };
-
 const product_expr = { type: EXPR_TYPE.Product, operand1: null, operand2: null };
-
 const division_expr = { type: EXPR_TYPE.Division, operand1: null, operand2: null };
-
 const exponential_expr = { type: EXPR_TYPE.Exponential, operand1: null, operand2: null };
-
 const log_expr = { type: EXPR_TYPE.Log, operand1: null, operand2: null };
+const sin_expr = { type: EXPR_TYPE.Sin, operand1: null, operand2: null };
+const cos_expr = { type: EXPR_TYPE.Cos, operand1: null, operand2: null };
+const tan_expr = { type: EXPR_TYPE.Tan, operand1: null, operand2: null };
+const arcsin_expr = { type: EXPR_TYPE.Arcsin, operand1: null, operand2: null };
+const arccos_expr = { type: EXPR_TYPE.Arccos, operand1: null, operand2: null };
+const arctan_expr = { type: EXPR_TYPE.Arctan, operand1: null, operand2: null };
+
 
 //---------------------------------------
 //These next few functions help solve for the roots of an equation.
@@ -513,6 +697,30 @@ const infixToPostfix = (infix) => {
   var outputQueue = "";
   var operatorStack = [];
   var operators = {
+    "sin": {
+      precedence: 5,
+      associativity: "Right"
+    },
+    "cos": {
+      precedence: 5,
+      associativity: "Right"
+    },
+    "tan": {
+      precedence: 5,
+      associativity: "Right"
+    },
+    "arcsin": {
+      precedence: 5,
+      associativity: "Right"
+    },
+    "arccos": {
+      precedence: 5,
+      associativity: "Right"
+    },
+    "arctan": {
+      precedence: 5,
+      associativity: "Right"
+    },
     "ln": {
       precedence: 5,
       associativity: "Right"
@@ -547,10 +755,10 @@ const infixToPostfix = (infix) => {
       outputQueue += token + " ";
     } else if (token === "e") {
       outputQueue += token + " "
-    } else if ("ln^*/+-".indexOf(token) !== -1) {
+    } else if ("arctanarccosarcsintancossinln^*/+-".indexOf(token) !== -1) {
       var o1 = token;
       var o2 = operatorStack[operatorStack.length - 1];
-      while ("ln^*/+-".indexOf(o2) !== -1 && ((operators[o1].associativity === "Left" && operators[o1].precedence <= operators[o2].precedence) || (operators[o1].associativity === "Right" && operators[o1].precedence < operators[o2].precedence))) {
+      while ("arctanarccosarcsintancossinln^*/+-".indexOf(o2) !== -1 && ((operators[o1].associativity === "Left" && operators[o1].precedence <= operators[o2].precedence) || (operators[o1].associativity === "Right" && operators[o1].precedence < operators[o2].precedence))) {
         outputQueue += operatorStack.pop() + " ";
         o2 = operatorStack[operatorStack.length - 1];
       }
@@ -567,7 +775,9 @@ const infixToPostfix = (infix) => {
   while (operatorStack.length > 0) {
     outputQueue += operatorStack.pop() + " ";
   }
-  return outputQueue.trim();
+  let outputQueueOutput = outputQueue.trim()
+  console.log(outputQueueOutput)
+  return outputQueueOutput;
 }
 
 const solvePostfix = (postfix) => {
@@ -583,13 +793,31 @@ const solvePostfix = (postfix) => {
         resultStack.push(make_number(postfix[i]))
       } else if (postfix[i] === "ln") {
         var a = resultStack.pop();
-        console.log(a, "aaaaaaaaaaaaa")
+        //console.log(a, "aaaaaaaaaaaaa")
         resultStack.push(simplify(make_log(a)))
+      } else if (postfix[i] === "sin") {
+        var a = resultStack.pop();
+        resultStack.push(simplify(make_sin(a)))
+      } else if (postfix[i] === "cos") {
+        var a = resultStack.pop();
+        resultStack.push(simplify(make_cos(a)))
+      } else if (postfix[i] === "tan") {
+        var a = resultStack.pop();
+        resultStack.push(simplify(make_tan(a)))
+      } else if (postfix[i] === "arcsin") {
+        var a = resultStack.pop();
+        resultStack.push(simplify(make_arcsin(a)))
+      } else if (postfix[i] === "arccos") {
+        var a = resultStack.pop();
+        resultStack.push(simplify(make_arccos(a)))
+      } else if (postfix[i] === "arctan") {
+        var a = resultStack.pop();
+        resultStack.push(simplify(make_arctan(a)))
       } else {
         var a = resultStack.pop();
-        console.log(a, "aaaaaaaaaaaaa")
+        //console.log(a, "aaaaaaaaaaaaa")
         var b = resultStack.pop();
-        console.log(b, "bbbbbbbbbbbb")
+        //console.log(b, "bbbbbbbbbbbb")
         if (postfix[i] === "+") {
           resultStack.push(simplify(make_sum(b, a)));
         } else if (postfix[i] === "-") {
@@ -683,17 +911,17 @@ let number1 = make_number(-1);
 let x = make_variable("x");
 const pow1 = make_power(x, make_number(2));
 
-const expr1 = make_sum(pow1, number1);
+const expr1 = make_sin(x);
 const fexpr = make_expr(EXPR_TYPE.Power, expr1, number1);
 //console.log(display_expr(basic_simplify_expr(derive(fexpr, "x"))));
 //console.log(display_expr(derive(make_expr(EXPR_TYPE.Exponential, number1, expr1), "x")))
 //expr2 = (4*x)^4
 //console.log(expr1)
-//console.log(display_expr(expr1))
+//console.log(display_expr(simplify(derive(expr1, x))))
 //console.log(display_expr(basic_simplify_expr(derive(expr2, "x"))))
 //console.log(display_expr(derive(make_log(x), "x")))
 //console.log(display_expr(derive(make_product(make_log(x), x), "x")))
 //console.log(display_expr(derive(make_power(make_product(make_number(2), x), x), "x")))
 //console.log(parser_derive("2^x"))
 //console.log(infixToPostfix("5*x+ln(x^2+4)"))
-console.log(parser_derive("e^x"))
+console.log(parser_derive("arcsin(x)"))
