@@ -463,7 +463,7 @@ function derive_power(expr, variable) {
     const part2 = make_product(make_product(make_log(f), expr), gp);
     return part2;
   } else if (is_number(f) !== true && is_number(g) !== true) {
-    c//onsole.log("HEEERE")
+    //onsole.log("HEEERE")
     const part3 = make_product(make_log(f), g)
     console.log(display_expr(part3), "PART3")
     const part2 = make_product(expr, derive(part3, "x"))
