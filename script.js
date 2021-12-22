@@ -504,21 +504,26 @@ function derive_tan(expr, variable) {
 
 function derive_arcsin(expr, variable) {
   const f = expr.operand1
-  const expr1 = make_division(make_number(1), make_power(make_minus(make_number(1), make_power(make_variable("x"), make_number(2))), make_division(make_number(1), make_number(2))))
+  const x = make_variable("x")
+  const half = make_division(make_number(1), make_number(2))
+  const expr1 = make_division(make_number(1), make_power(make_minus(make_number(1), make_power(f, make_number(2))), half))
   console.log(display_expr(make_product(expr1, derive(f, variable))))
   return make_product(expr1, derive(f, variable))
 }
 
 function derive_arccos(expr, variable) {
+  const x = make_variable("x")
   const f = expr.operand1
-  const expr1 = make_division(make_number(-1), make_power(make_minus(make_number(1), make_power(make_variable("x"), make_number(2))), make_division(make_number(1), make_number(2))))
+  const half = make_division(make_number(1), make_number(2))
+  const expr1 = make_division(make_number(-1), make_power(make_minus(make_number(1), make_power(f, make_number(2))), half))
   console.log(display_expr(make_product(expr1, derive(f, variable))))
   return make_product(expr1, derive(f, variable))
 }
 
 function derive_arctan(expr, variable) {
   const f = expr.operand1
-  const expr1 = make_division(make_number(1), make_sum(make_number(1), make_power(make_variable("x"), make_number(2))))
+  const x = make_variable("x")
+  const expr1 = make_division(make_number(1), make_sum(make_number(1), make_power(f, make_number(2))))
   console.log(display_expr(make_product(expr1, derive(f, variable))))
   return make_product(expr1, derive(f, variable))
 }
