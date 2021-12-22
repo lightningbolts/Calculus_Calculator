@@ -173,7 +173,7 @@ function display_expr(expr) {
     return `${display_expr(expr.operand1)} ^ {${display_expr(expr.operand2)}}`;
   }
   if (is_log(expr)) {
-    return `\\ln \\left( ${display_expr(expr.operand1)} \\right)`;
+    return `\ln \\left( ${display_expr(expr.operand1)} \\right)`;
   }
   if (is_sin(expr)) {
     return `\\sin \\left( ${display_expr(expr.operand1)} \\right)`;
@@ -222,12 +222,16 @@ function simplify(expr) {
   if (is_log(expr)) {
     const op1 = simplify(expr.operand1)
     //console.log(expr, "EXPR")
-    //console.log(op1, "This is op1")
-    //console.log(op1.operand1, "This is op1.operand1")
-    //console.log(op1.operand2, "This is op1.operand2")
+    console.log(op1, "This is op1")
+    console.log(op1.operand1, "This is op1.operand1")
+    console.log(op1.operand2, "This is op1.operand2")
     if (is_power(op1) && op1.operand1.operand1 === "e") {
       console.log("MARKER?")
       return op1.operand2
+    }
+    if (op1.operand1 === "e") {
+      console.log("...")
+      return make_number(1)
     }
     return make_log(op1)
   }
@@ -293,7 +297,7 @@ function simplify(expr) {
       if (p1v === "e" || p2v === "e") {
         return make_expr(expr.type, part1, part2)
       }
-      result = p1v ^ p2v;
+      result = p1v ** p2v;
       return make_number(result);
     }
   } else if (is_number(part1) && !is_number(part2)) {
