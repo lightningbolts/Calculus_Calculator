@@ -160,7 +160,7 @@ function display_expr(expr) {
     return `\\left( ${display_expr(expr.operand1)} - ${display_expr(expr.operand2)} \\right)`;
   }
   if (is_product(expr)) {
-    return `${display_expr(expr.operand1)} \\cdot ${display_expr(expr.operand2)}`;
+    return `\\left( ${display_expr(expr.operand1)} \\cdot ${display_expr(expr.operand2)} \\right)`;
   }
   if (is_division(expr)) {
     return `\\left( \\frac{${display_expr(expr.operand1)}}{${display_expr(expr.operand2)}} \\right)`;
@@ -170,7 +170,7 @@ function display_expr(expr) {
     if (expr.operand2.operand1 === 0.5) {
       return `\\sqrt{${display_expr(expr.operand1)}}`;
     }
-    return `({${display_expr(expr.operand1)} ^ {${display_expr(expr.operand2)}}})`;
+    return `\\left( {${display_expr(expr.operand1)} ^ {${display_expr(expr.operand2)}}} \\right)`;
   }
   if (is_log(expr)) {
     return `\ln \\left( ${display_expr(expr.operand1)} \\right)`;
@@ -364,27 +364,46 @@ function simplify(expr) {
     }
     return make_expr(expr.type, part1, part2)
   } else {
+    /*if (conditional1(part1, part2, expr)) {
+      return make_number(1)
+    }
+    if (conditional1(part2, part1, expr)) {
+      return make_number(1)
+    }*/
     return make_expr(expr.type, part1, part2)
   }
 }
 
-function binary_simplify_degree(expr) {
-  //if the expr.operand1 and expr.operand2 are not numbers
+function conditional1(part1, part2, expr) {
+  return is_division(part1) && part1.operand2 === part2.operand1 && is_power(part2) || is_variable(part2) && is_product(expr)
+}
+
+//binary_simplify simplifies the expr entirely.
+function binary_simplify(expr) {
+  let op1 = simplify(expr.operand1)
+  let op2 = simplify(expr.operand2)
+  /*let op1op1 = simplify(op1.operand1)
+  let op1op2 = simplify(op1.operand2)
+  let op2op1 = simplify(op2.operand1)
+  let op2op2 = simplify(op2.operand2)*/
+  if (is_division(op1) && op1.operand2 === op2.operand1 && is_power(op2) || is_variable(op2) && is_product(expr)) {
+    return make_number(1)
+  }
+  if (is_division(op2) && op2.operand2 === op2.operand1 && is_power(op1) || is_variable(op1) && is_product(expr)) {
+    return make_number(1)
+  }
+  return make_expr(expr.type, op1, op2)
+}
+
+function same_structure(expr) {
   let op1 = expr.operand1
   let op2 = expr.operand2
-  //if op1 and op2 are the same degree, simplify by operator
-  // 2*x^3 + 4*x^3 => 6*x^3
-  if (same_structure(op1, op2)) {
+  if (same_operator(op1, op2)) {
     if (is_sum(expr)) {
-      return make_product(make_sum(),)
+
     }
   }
 }
-
-function same_structure(op1, op2) {
-
-}
-
 function same_operator(op1, op2) {
   return op1.type === op2.type
 }
