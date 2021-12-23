@@ -170,7 +170,7 @@ function display_expr(expr) {
     if (expr.operand2.operand1 === 0.5) {
       return `\\sqrt{${display_expr(expr.operand1)}}`;
     }
-    return `{${display_expr(expr.operand1)} ^ {${display_expr(expr.operand2)}}}`;
+    return `({${display_expr(expr.operand1)}} ^ {${display_expr(expr.operand2)}})`;
   }
   if (is_log(expr)) {
     return `\ln \\left( ${display_expr(expr.operand1)} \\right)`;
