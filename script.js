@@ -160,7 +160,7 @@ function display_expr(expr) {
     return `\\left( ${display_expr(expr.operand1)} - ${display_expr(expr.operand2)} \\right)`;
   }
   if (is_product(expr)) {
-    return `${display_expr(expr.operand1)} \\cdot ${display_expr(expr.operand2)}`;
+    return `\\left( ${display_expr(expr.operand1)} \\cdot ${display_expr(expr.operand2)} \\right)`;
   }
   if (is_division(expr)) {
     return `\\left( \\frac{${display_expr(expr.operand1)}}{${display_expr(expr.operand2)}} \\right)`;
@@ -170,7 +170,7 @@ function display_expr(expr) {
     if (expr.operand2.operand1 === 0.5) {
       return `\\sqrt{${display_expr(expr.operand1)}}`;
     }
-    return `({${display_expr(expr.operand1)}} ^ {${display_expr(expr.operand2)}})`;
+    return `\\left( {${display_expr(expr.operand1)}} ^ {${display_expr(expr.operand2)}} \\right)`;
   }
   if (is_log(expr)) {
     return `\ln \\left( ${display_expr(expr.operand1)} \\right)`;
