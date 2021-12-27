@@ -8,6 +8,7 @@
   <head>
     <script type="text/javascript" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script src="script.js"></script>
+    <script src="https://www.desmos.com/api/v1.6/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
@@ -33,6 +34,15 @@
     <div id="output" class="Calc">
       The answer is: \({}\)
     </div>
+    <div id="calculator" style="width: 600px; height: 400px;">
+      <script>
+        var elt = document.getElementById('calculator');
+        var calculator = Desmos.GraphingCalculator(elt);
+        const element = document.getElementById("strtext")
+        calculator.setExpression({ id: 'graph1', latex: `${element.value}` });
+      </script>
+    </div>
+
     <!--<nav id="navbar">
       <header></header>
       <ul>
