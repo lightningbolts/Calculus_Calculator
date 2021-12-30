@@ -546,6 +546,8 @@ function derive_arctan(expr, variable) {
   console.log(display_expr(make_product(expr1, derive(f, variable))))
   return make_product(expr1, derive(f, variable))
 }
+
+
 //---------------------------------------
 //Special_functions will soon be able to list all the special functions.
 
@@ -872,13 +874,68 @@ function initialize() {
   resetText()
 }
 
+function display_expr_for_graph(expr) {
+  if (is_number(expr)) {
+    return expr.operand1.toString();
+  }
+  if (is_variable(expr)) {
+    return expr.operand1;
+  }
+  if (is_sum(expr)) {
+    return `(${display_expr_for_graph(expr.operand1)} + ${display_expr_for_graph(expr.operand2)}) `;
+  }
+  if (is_minus(expr)) {
+    return `( ${display_expr_for_graph(expr.operand1)} - ${display_expr_for_graph(expr.operand2)})`;
+  }
+  if (is_product(expr)) {
+    return `( ${display_expr_for_graph(expr.operand1)} \\cdot ${display_expr_for_graph(expr.operand2)})`;
+  }
+  if (is_division(expr)) {
+    return `( \\frac{${display_expr_for_graph(expr.operand1)}}{${display_expr_for_graph(expr.operand2)}})`;
+  }
+  if (is_power(expr)) {
+    console.log(expr)
+    if (expr.operand2.operand1 === 0.5) {
+      return `\\sqrt{${display_expr_for_graph(expr.operand1)}}`;
+    }
+    return `{${display_expr_for_graph(expr.operand1)}} ^ {${display_expr_for_graph(expr.operand2)}}`;
+  }
+  if (is_log(expr)) {
+    return `\\ln (${display_expr_for_graph(expr.operand1)})`;
+  }
+  if (is_sin(expr)) {
+    return `\\sin(${display_expr_for_graph(expr.operand1)})`;
+  }
+  if (is_cos(expr)) {
+    return `\\cos(${display_expr_for_graph(expr.operand1)})`;
+  }
+  if (is_tan(expr)) {
+    return `\\tan(${display_expr_for_graph(expr.operand1)})`;
+  }
+  if (is_arcsin(expr)) {
+    return `\\arcsin(${display_expr_for_graph(expr.operand1)})`;
+  }
+  if (is_arccos(expr)) {
+    return `\\arccos(${display_expr_for_graph(expr.operand1)})`;
+  }
+  if (is_arctan(expr)) {
+    return `\\arctan(${display_expr_for_graph(expr.operand1)})`;
+  }
+}
+
 function calculate() {
   initialize()
   const element = document.getElementById("strtext")
   console.log(element)
   let result = latex(parser_derive(element.value))
+  let result2 = graph_parser_derive(element.value)
   console.log(result)
+  var elt = document.getElementById('calculator');
+  calculator.setExpression({ id: 'graph1', latex: element.value });
+  calculator.setExpression({ id: 'graph2', latex: result2 })
+  var element2 = document.getElementsByClassName('dcg-typeset-math')
   render(result)
+  console.log(result2)
 }
 
 MathJax = {
@@ -907,6 +964,10 @@ function resetText() {
 
 function parser_derive(str) {
   return display_expr(simplify(derive(solvePostfix(infixToPostfix(str))), "x"))
+}
+
+function graph_parser_derive(str) {
+  return display_expr_for_graph(simplify(derive(solvePostfix(infixToPostfix(str))), "x"))
 }
 
 function parser(str) {
