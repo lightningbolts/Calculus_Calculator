@@ -929,9 +929,10 @@ function calculate() {
   console.log(element.value)
   let result = latex(parser_derive(element.value))
   let result2 = graph_parser_derive(element.value)
+  let result3 = display_expr_for_graph(parser(element.value))
   console.log(result)
   var elt = document.getElementById('calculator');
-  calculator.setExpression({ id: 'graph1', latex: element.value });
+  calculator.setExpression({ id: 'graph1', latex: result3 });
   calculator.setExpression({ id: 'graph2', latex: result2 })
   var element2 = document.getElementsByClassName('dcg-typeset-math')
   render(result)
