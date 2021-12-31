@@ -222,15 +222,15 @@ function simplify(expr) {
   if (is_log(expr)) {
     const op1 = simplify(expr.operand1)
     //console.log(expr, "EXPR")
-    console.log(op1, "This is op1")
-    console.log(op1.operand1, "This is op1.operand1")
-    console.log(op1.operand2, "This is op1.operand2")
+    //console.log(op1, "This is op1")
+    //console.log(op1.operand1, "This is op1.operand1")
+    //console.log(op1.operand2, "This is op1.operand2")
     if (is_power(op1) && op1.operand1.operand1 === "e") {
-      console.log("MARKER?")
+      //console.log("MARKER?")
       return op1.operand2
     }
     if (op1.operand1 === "e") {
-      console.log("...")
+      //console.log("...")
       return make_number(1)
     }
     return make_log(op1)
@@ -926,7 +926,7 @@ function display_expr_for_graph(expr) {
 function calculate() {
   initialize()
   const element = document.getElementById("strtext")
-  console.log(element)
+  console.log(element.value)
   let result = latex(parser_derive(element.value))
   let result2 = graph_parser_derive(element.value)
   console.log(result)
@@ -936,6 +936,12 @@ function calculate() {
   var element2 = document.getElementsByClassName('dcg-typeset-math')
   render(result)
   console.log(result2)
+}
+
+function desmos_formatter(str) {
+  let str1 = str.replaceAll("*", "\\cdot")
+  console.log(str1, "1234567890")
+  return str1
 }
 
 MathJax = {
